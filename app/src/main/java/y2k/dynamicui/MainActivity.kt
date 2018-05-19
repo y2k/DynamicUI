@@ -1,8 +1,10 @@
 package y2k.dynamicui
 
 import android.app.Activity
+import android.app.Application
 import android.os.Bundle
-import y2k.dynamicui.recyclerview.RecyclerViewFragment
+import com.facebook.soloader.SoLoader
+import y2k.dynamicui.litho.LithoFragment
 
 class MainActivity : Activity() {
 
@@ -13,8 +15,16 @@ class MainActivity : Activity() {
         if (savedInstanceState == null) {
             fragmentManager
                 .beginTransaction()
-                .add(R.id.container, RecyclerViewFragment())
+                .add(R.id.container, LithoFragment())
                 .commit()
         }
+    }
+}
+
+class App : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+        SoLoader.init(this, false)
     }
 }
