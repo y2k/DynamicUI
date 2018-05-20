@@ -6,61 +6,83 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.facebook.litho.Column
 import com.facebook.litho.Component
 import com.facebook.litho.ComponentContext
 import com.facebook.litho.StateValue
 import com.facebook.litho.annotations.*
 import com.facebook.yoga.YogaEdge
-import y2k.dynamicui.common.EditItem
-import y2k.dynamicui.common.Item
-import y2k.dynamicui.common.SpinnerItem
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
+import y2k.dynamicui.common.*
 import com.facebook.litho.Column.create as column
 import com.facebook.litho.LithoView.create as lithoView
 import com.facebook.litho.widget.Text.create as text
 
-@LayoutSpec
-object RootSpec {
+object RootObject {
 
-    @OnCreateLayout
-    fun onCreateLayout(c: ComponentContext, @State state: AppState): Component =
+    fun viewContent(c: ComponentContext, @State state: AppState): Component =
         column(c).apply {
-            paddingDip(YogaEdge.ALL, 16f)
+            paddingDip(YogaEdge.HORIZONTAL, 16f)
             backgroundColor(Color.WHITE)
 
-            child(h1(c, "Settings"))
-
             state.items
-                .map { configView(c, it) }
+                .map { viewConfig(c, it) }
                 .forEach { child(it) }
         }.build()
 
-    private fun configView(c: ComponentContext, item: Item) =
+    private fun viewConfig(c: ComponentContext, item: Item) =
         when (item) {
-            is EditItem -> viewEditItem(c, item)
-            is SpinnerItem -> viewSpinnerItem(c, item)
+            is EditItem -> viewEdit(c, item)
+            is SpinnerItem -> viewSpinner(c, item)
+            is GroupItem -> viewGroup(c, item)
         }
 
-    private fun viewEditItem(c: ComponentContext, item: Item) =
+    private fun viewGroup(c: ComponentContext, item: GroupItem): Column.Builder =
+        column(c).apply {
+            marginDip(YogaEdge.VERTICAL, 8f)
+
+            child(
+                text(c).apply {
+                    text(item.title)
+                    textSizeSp(20f)
+                })
+
+            item.children
+                .map { viewConfig(c, it) }
+                .forEach { child(it) }
+        }
+
+    private fun viewEdit(c: ComponentContext, item: EditItem) =
+        viewStub(c, item)
+
+    private fun viewSpinner(c: ComponentContext, item: SpinnerItem) =
+        viewStub(c, item)
+
+    private fun viewStub(c: ComponentContext, item: Item) =
         text(c).apply {
-            text("($item)")
+            text("$item")
             textSizeSp(20f)
         }
+}
 
-    private fun viewSpinnerItem(c: ComponentContext, item: Item) =
-        text(c).apply {
-            text("($item)")
-            textSizeSp(20f)
-        }
+data class AppState(val items: List<Item>)
 
-    private fun h1(c: ComponentContext, text: String) =
-        text(c).apply {
-            text(text)
-            textSizeSp(40f)
-        }
+@LayoutSpec
+object RootSpec {
 
     @OnCreateInitialState
-    fun createInitialState(c: ComponentContext, state: StateValue<AppState>) =
-        state.set(AppState(listOf(EditItem, EditItem, SpinnerItem, SpinnerItem, EditItem, EditItem)))
+    fun createInitialState(c: ComponentContext, state: StateValue<AppState>) {
+        state.set(AppState(emptyList()))
+
+        launch(UI) {
+            Root.updateState(c, Effects.loadSettings().let(::AppState))
+        }
+    }
+
+    @OnCreateLayout
+    fun onCreateLayout(c: ComponentContext, @State state: AppState): Component =
+        RootObject.viewContent(c, state)
 
     @OnUpdateState
     fun updateState(state: StateValue<AppState>, @Param param: AppState) =
@@ -72,5 +94,3 @@ class LithoFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View =
         lithoView(activity, Root.create(ComponentContext(activity)).build())
 }
-
-data class AppState(val items: List<Item>)
