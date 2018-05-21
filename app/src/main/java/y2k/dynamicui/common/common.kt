@@ -1,28 +1,26 @@
 package y2k.dynamicui.common
 
 import kotlinx.coroutines.experimental.delay
+import java.util.*
 
 sealed class Item
 
 data class GroupItem(val title: String, val isEnabled: Boolean, val children: List<Item>) : Item()
 
-object EditItem : Item() {
-    override fun toString(): String = "EditItem"
-}
+data class SwipeItem(val title: String, val isChecked: Boolean) : Item()
 
-object SpinnerItem : Item() {
-    override fun toString(): String = "SpinnerItem"
-}
+data class SeekBarItem(val value: Float) : Item()
+
+data class NumberItem(val value: Int) : Item()
 
 object Effects {
 
     suspend fun loadSettings(): List<Item> {
         delay(1000)
-        return listOf(
-            GroupItem("Group #1", true, listOf(EditItem, SpinnerItem)),
-            GroupItem("Group #2", true, listOf(EditItem, SpinnerItem)),
-            GroupItem("Group #3", true, listOf(EditItem, SpinnerItem)),
-            GroupItem("Group #4", true, listOf(EditItem, SpinnerItem)),
-            GroupItem("Group #5", true, listOf(EditItem, SpinnerItem)))
+        val r = Random()
+        return List(10) {
+            GroupItem("Group #$it", r.nextBoolean(), listOf(
+                NumberItem(0), SeekBarItem(r.nextFloat()), SwipeItem("Swipe #$it", r.nextBoolean())))
+        }
     }
 }

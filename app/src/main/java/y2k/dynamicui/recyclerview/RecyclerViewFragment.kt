@@ -11,8 +11,10 @@ import android.view.ViewGroup
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.fragment_recyclerview.*
 import kotlinx.android.synthetic.main.item_1.*
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
 import y2k.dynamicui.R
-import y2k.dynamicui.common.EditItem
+import y2k.dynamicui.common.Effects
 import y2k.dynamicui.common.Item
 
 class RecyclerViewFragment : Fragment() {
@@ -20,7 +22,12 @@ class RecyclerViewFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        list.adapter = Adapter()
+        val adapter = Adapter()
+        list.adapter = adapter
+
+        launch(UI) {
+            adapter.submitList(Effects.loadSettings())
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
@@ -29,14 +36,10 @@ class RecyclerViewFragment : Fragment() {
 
 private class Adapter : ListAdapter<Item, Adapter.VH>(itemCallback) {
 
-    private val items = List<Item>(15, { EditItem })
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
         VH(LayoutInflater.from(parent.context).inflate(R.layout.item_1, parent, false))
 
-    override fun getItemCount(): Int = items.size
-
-    override fun onBindViewHolder(holder: VH, position: Int) = holder.bind(items[position])
+    override fun onBindViewHolder(holder: VH, position: Int) = holder.bind(getItem(position))
 
     private class VH(override val containerView: View) : ViewHolder(containerView), LayoutContainer {
 
