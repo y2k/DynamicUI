@@ -1,19 +1,35 @@
 package y2k.dynamicui.common
 
+import android.view.View
 import android.widget.SeekBar
 import android.widget.Switch
-import com.facebook.litho.ComponentContext
-import com.facebook.litho.ComponentLayout
-import com.facebook.litho.Size
-import com.facebook.litho.SizeSpec
+import com.facebook.litho.*
 import com.facebook.litho.SizeSpec.UNSPECIFIED
 import com.facebook.litho.annotations.*
+import java.util.concurrent.atomic.AtomicReference
 
 @Event
 class SwitchIsCheckedChanged(@JvmField var isChecked: Boolean = false)
 
 @MountSpec(events = [SwitchIsCheckedChanged::class])
 object SwitchComponentSpec {
+
+    private val cachedMinSize = AtomicReference<Size>()
+
+    @OnPrepare
+    fun onPrepare(c: ComponentContext, minSize: Output<Size>) {
+        val size = cachedMinSize.get()
+        if (size != null) {
+            minSize.set(Size(size.width, size.height))
+        } else {
+            Switch(c).apply {
+                measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+                val measuredSize = Size(measuredWidth, measuredHeight)
+                minSize.set(measuredSize)
+                cachedMinSize.set(measuredSize)
+            }
+        }
+    }
 
     @OnBind
     fun onBind(c: ComponentContext, view: Switch) {
@@ -36,12 +52,15 @@ object SwitchComponentSpec {
     }
 
     @OnMeasure
-    fun onMeasure(c: ComponentContext, layout: ComponentLayout, widthSpec: Int, heightSpec: Int, size: Size) {
+    fun onMeasure(c: ComponentContext, layout: ComponentLayout, widthSpec: Int, heightSpec: Int, size: Size, @FromPrepare minSize: Size) {
         size.width = when (SizeSpec.getMode(widthSpec)) {
-            UNSPECIFIED -> 200
+            UNSPECIFIED -> minSize.width
             else -> SizeSpec.getSize(widthSpec)
         }
-        size.height = 100
+        size.height = when (SizeSpec.getMode(heightSpec)) {
+            UNSPECIFIED -> minSize.height
+            else -> SizeSpec.getSize(heightSpec)
+        }
     }
 }
 

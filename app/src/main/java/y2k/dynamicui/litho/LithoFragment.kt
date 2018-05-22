@@ -41,9 +41,25 @@ object RootObject {
     private fun viewConfig(c: ComponentContext, item: Item) =
         when (item) {
             is GroupItem -> viewGroup(c, item)
+            is NumberItem -> viewNumber(c, item)
             is SwipeItem -> viewSwipe(c, item)
             is SeekBarItem -> viewSeekBarItem(c, item)
-            is NumberItem -> viewNumber(c, item)
+        }
+
+    private fun viewGroup(c: ComponentContext, item: GroupItem): Column.Builder =
+        column(c).apply {
+            marginDip(YogaEdge.VERTICAL, 8f)
+            backgroundColor(Color.LTGRAY)
+
+            child(
+                text(c).apply {
+                    text(item.title)
+                    textSizeSp(20f)
+                })
+
+            item.children
+                .map { viewConfig(c, it) }
+                .forEach { child(it) }
         }
 
     private fun viewNumber(c: ComponentContext, item: NumberItem) =
@@ -70,22 +86,6 @@ object RootObject {
                     text("+")
                     widthDip(100f)
                 })
-        }
-
-    private fun viewGroup(c: ComponentContext, item: GroupItem): Column.Builder =
-        column(c).apply {
-            marginDip(YogaEdge.VERTICAL, 8f)
-            backgroundColor(Color.LTGRAY)
-
-            child(
-                text(c).apply {
-                    text(item.title)
-                    textSizeSp(20f)
-                })
-
-            item.children
-                .map { viewConfig(c, it) }
-                .forEach { child(it) }
         }
 
     private fun viewSwipe(c: ComponentContext, item: SwipeItem) =
