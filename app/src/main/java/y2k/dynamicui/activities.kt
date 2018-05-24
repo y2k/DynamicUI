@@ -5,6 +5,7 @@ import android.app.Application
 import android.os.Bundle
 import com.facebook.soloader.SoLoader
 import y2k.dynamicui.litho.LithoFragment
+import y2k.dynamicui.recyclerview.RecyclerViewFragment
 
 class MainActivity : Activity() {
 
@@ -16,6 +17,21 @@ class MainActivity : Activity() {
             fragmentManager
                 .beginTransaction()
                 .add(R.id.container, LithoFragment())
+                .commit()
+        }
+    }
+}
+
+class RecyclerViewActivity : Activity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        if (savedInstanceState == null) {
+            fragmentManager
+                .beginTransaction()
+                .add(R.id.container, RecyclerViewFragment())
                 .commit()
         }
     }

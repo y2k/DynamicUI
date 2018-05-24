@@ -11,8 +11,6 @@ import com.facebook.litho.*
 import com.facebook.litho.annotations.*
 import com.facebook.yoga.YogaAlign
 import com.facebook.yoga.YogaEdge
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
 import y2k.dynamicui.common.*
 import com.facebook.litho.Column.create as column
 import com.facebook.litho.LithoView.create as lithoView
@@ -23,9 +21,27 @@ import com.facebook.litho.widget.VerticalScroll.create as scroll
 import y2k.dynamicui.common.SeekBarComponent.create as seekBar
 import y2k.dynamicui.common.SwitchComponent.create as switch
 
-object RootObject {
+sealed class Events {
+    class ItemsLoaded(val items: List<Item>) : Events()
+    class Swiped(val item: Item) : Events()
+    class Click(val item: Item, val increase: Boolean) : Events()
+}
 
-    fun viewContent(c: ComponentContext, @State state: AppState): Component =
+data class Model(val items: List<Item>)
+
+object Page {
+
+    fun init(): Pair<Model, EffectHandlers?> =
+        Model(emptyList()) to EffectHandlers.LoadItems
+
+    fun update(model: Model, msg: Events): Pair<Model, EffectHandlers?> =
+        when (msg) {
+            is Events.ItemsLoaded -> model.copy(items = msg.items) to null
+            is Events.Swiped -> model to EffectHandlers.LoadItems
+            is Events.Click -> model to EffectHandlers.LoadItems
+        }
+
+    fun view(c: ComponentContext, @State state: Model): Component =
         scroll(c).apply {
             childComponent(
                 column(c).apply {
@@ -70,7 +86,7 @@ object RootObject {
                 text(c, android.R.attr.buttonStyle, 0).apply {
                     text("-")
                     widthDip(100f)
-                    clickHandler(Root.onClick(c, item))
+                    clickHandler(Root.onClick(c, Events.Click(item, false)))
                 })
             child(
                 text(c).apply {
@@ -82,7 +98,7 @@ object RootObject {
                 })
             child(
                 text(c, android.R.attr.buttonStyle, 0).apply {
-                    clickHandler(Root.onClick(c, item))
+                    clickHandler(Root.onClick(c, Events.Click(item, true)))
                     text("+")
                     widthDip(100f)
                 })
@@ -91,7 +107,7 @@ object RootObject {
     private fun viewSwipe(c: ComponentContext, item: SwipeItem) =
         switch(c).apply {
             isChecked(item.isChecked)
-            switchIsCheckedChangedHandler(Root.onSwiped(c, item))
+            switchIsCheckedChangedHandler(Root.onSwiped(c, Events.Swiped(item)))
         }
 
     private fun viewSeekBarItem(c: ComponentContext, item: SeekBarItem) =
@@ -100,39 +116,37 @@ object RootObject {
         }
 }
 
-data class AppState(val items: List<Item>)
+@Event
+object UpdateStateEvent
 
 @LayoutSpec
 object RootSpec {
 
-    @OnEvent(SwitchIsCheckedChanged::class)
-    fun onSwiped(c: ComponentContext, @FromEvent isChecked: Boolean, @Param item: Item) {
-        reloadAsync(c)
+    @OnCreateInitialState
+    fun createInitialState(c: ComponentContext, state: StateValue<Model>) {
+        val (model, effect) = Page.init()
+        state.set(model)
+        ElmUtils.dispatchEffect(effect, { Root.onUpdateState(c, it).dispatchEvent(UpdateStateEvent) })
     }
+
+    @OnEvent(UpdateStateEvent::class)
+    fun onUpdateState(c: ComponentContext, @Param msg: Events, @State state: Model) =
+        ElmUtils.dispatchEvents(c, state, msg, { Root.updateState(c, it) })
+
+    @OnEvent(SwitchIsCheckedChanged::class)
+    fun onSwiped(c: ComponentContext, @State state: Model, @Param msg: Events) =
+        ElmUtils.dispatchEvents(c, state, msg, { Root.updateState(c, it) })
 
     @OnEvent(ClickEvent::class)
-    fun onClick(c: ComponentContext, @Param item: Item) {
-        reloadAsync(c)
-    }
-
-    @OnCreateInitialState
-    fun createInitialState(c: ComponentContext, state: StateValue<AppState>) {
-        state.set(AppState(emptyList()))
-        reloadAsync(c)
-    }
-
-    private fun reloadAsync(c: ComponentContext) {
-        launch(UI) {
-            Root.updateState(c, Effects.loadSettings().let(::AppState))
-        }
-    }
+    fun onClick(c: ComponentContext, @State state: Model, @Param msg: Events) =
+        ElmUtils.dispatchEvents(c, state, msg, { Root.updateState(c, it) })
 
     @OnCreateLayout
-    fun onCreateLayout(c: ComponentContext, @State state: AppState): Component =
-        RootObject.viewContent(c, state)
+    fun onCreateLayout(c: ComponentContext, @State state: Model): Component =
+        Page.view(c, state)
 
     @OnUpdateState
-    fun updateState(state: StateValue<AppState>, @Param param: AppState) =
+    fun updateState(state: StateValue<Model>, @Param param: Model) =
         state.set(param)
 }
 

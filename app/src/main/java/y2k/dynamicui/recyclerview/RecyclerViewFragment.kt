@@ -11,11 +11,12 @@ import android.view.ViewGroup
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.fragment_recyclerview.*
 import kotlinx.android.synthetic.main.item_1.*
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
 import y2k.dynamicui.R
-import y2k.dynamicui.common.Effects
+import y2k.dynamicui.common.EffectHandlers
+import y2k.dynamicui.common.ElmUtils
 import y2k.dynamicui.common.Item
+import y2k.dynamicui.litho.Model
+import y2k.dynamicui.litho.Page
 
 class RecyclerViewFragment : Fragment() {
 
@@ -25,8 +26,16 @@ class RecyclerViewFragment : Fragment() {
         val adapter = Adapter()
         list.adapter = adapter
 
-        launch(UI) {
-            adapter.submitList(Effects.loadSettings())
+        val (model, effect) = Page.init()
+        handleEffect(effect, model, adapter)
+    }
+
+    private fun handleEffect(effect: EffectHandlers?, model: Model, adapter: Adapter) {
+        adapter.submitList(model.items)
+
+        ElmUtils.dispatchEffect(effect) { msg ->
+            val (newModel, newEffect) = Page.update(model, msg)
+            handleEffect(newEffect, newModel, adapter)
         }
     }
 
