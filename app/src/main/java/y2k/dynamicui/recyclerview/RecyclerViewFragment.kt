@@ -10,11 +10,10 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.fragment_recyclerview.*
-import kotlinx.android.synthetic.main.item_1.*
+import kotlinx.android.synthetic.main.item_seekbar.*
+import kotlinx.android.synthetic.main.item_swipe.*
 import y2k.dynamicui.R
-import y2k.dynamicui.common.EffectHandlers
-import y2k.dynamicui.common.ElmUtils
-import y2k.dynamicui.common.Item
+import y2k.dynamicui.common.*
 import y2k.dynamicui.litho.Model
 import y2k.dynamicui.litho.Page
 
@@ -45,15 +44,54 @@ class RecyclerViewFragment : Fragment() {
 
 private class Adapter : ListAdapter<Item, Adapter.VH>(itemCallback) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
-        VH(LayoutInflater.from(parent.context).inflate(R.layout.item_1, parent, false))
+    override fun getItemViewType(position: Int): Int = position
 
-    override fun onBindViewHolder(holder: VH, position: Int) = holder.bind(getItem(position))
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+        val i = LayoutInflater.from(parent.context)
+        return when (getItem(viewType)) {
+            is GroupItem -> SwitchVH(i.inflate(R.layout.item_swipe, parent, false))
+            is SwipeItem -> TODO()
+            is SeekBarItem -> TODO()
+            is NumberItem -> TODO()
+        }
+    }
 
-    private class VH(override val containerView: View) : ViewHolder(containerView), LayoutContainer {
+    override fun onBindViewHolder(holder: VH, position: Int) {
 
-        fun bind(item: Item) {
-            title.text = "${item.hashCode()}"
+        val x =
+            when (getItem(position)) {
+                is GroupItem -> TODO()
+                is SwipeItem -> TODO()
+                is SeekBarItem -> TODO()
+                is NumberItem -> TODO()
+            }
+
+        holder.bind(getItem(position))
+    }
+
+    private abstract class VH(view: View) : ViewHolder(view) {
+        abstract fun bind(item: Item)
+    }
+
+    private class SwitchVH(
+        override val containerView: View) :
+        LayoutContainer,
+        VH(containerView) {
+
+        override fun bind(item: Item) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        fun bind(item: SwipeItem) {
+            switchView.text = "${item.hashCode()}"
+        }
+    }
+
+    private class SpinnerVH(override val containerView: View) : ViewHolder(containerView), LayoutContainer {
+
+        fun bind(item: SeekBarItem) {
+            seekbar.progress = (10_000 * item.value).toInt()
+            seekbar.max = 10_000
         }
     }
 
