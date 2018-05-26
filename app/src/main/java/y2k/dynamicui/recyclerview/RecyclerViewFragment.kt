@@ -50,7 +50,7 @@ private class Adapter : ListAdapter<Item, Adapter.VH>(itemCallback) {
         val i = LayoutInflater.from(parent.context)
         return when (getItem(viewType)) {
             is GroupItem -> SwitchVH(i.inflate(R.layout.item_swipe, parent, false))
-            is SwipeItem -> TODO()
+            is SwitchItem -> TODO()
             is SeekBarItem -> TODO()
             is NumberItem -> TODO()
         }
@@ -61,7 +61,7 @@ private class Adapter : ListAdapter<Item, Adapter.VH>(itemCallback) {
         val x =
             when (getItem(position)) {
                 is GroupItem -> TODO()
-                is SwipeItem -> TODO()
+                is SwitchItem -> TODO()
                 is SeekBarItem -> TODO()
                 is NumberItem -> TODO()
             }
@@ -82,7 +82,7 @@ private class Adapter : ListAdapter<Item, Adapter.VH>(itemCallback) {
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
 
-        fun bind(item: SwipeItem) {
+        fun bind(item: SwitchItem) {
             switchView.text = "${item.hashCode()}"
         }
     }
