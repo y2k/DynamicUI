@@ -73,10 +73,8 @@ private class Adapter : ListAdapter<Item, Adapter.VH>(itemCallback) {
         abstract fun bind(item: Item)
     }
 
-    private class SwitchVH(
-        override val containerView: View) :
-        LayoutContainer,
-        VH(containerView) {
+    private class SwitchVH(override val containerView: View)
+        : LayoutContainer, VH(containerView) {
 
         override fun bind(item: Item) {
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -87,7 +85,8 @@ private class Adapter : ListAdapter<Item, Adapter.VH>(itemCallback) {
         }
     }
 
-    private class SpinnerVH(override val containerView: View) : ViewHolder(containerView), LayoutContainer {
+    private class SpinnerVH(override val containerView: View)
+        : ViewHolder(containerView), LayoutContainer {
 
         fun bind(item: SeekBarItem) {
             seekbar.progress = (10_000 * item.value).toInt()
