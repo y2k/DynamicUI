@@ -58,7 +58,7 @@ object Page {
         when (item) {
             is GroupItem -> viewGroup(c, item)
             is NumberItem -> viewNumber(c, item)
-            is SwitchItem -> viewSwipe(c, item)
+            is SwitchItem -> viewSwitch(c, item)
             is SeekBarItem -> viewSeekBarItem(c, item)
         }
 
@@ -104,7 +104,7 @@ object Page {
                 })
         }
 
-    private fun viewSwipe(c: ComponentContext, item: SwitchItem) =
+    private fun viewSwitch(c: ComponentContext, item: SwitchItem) =
         switch(c).apply {
             isChecked(item.isChecked)
             switchIsCheckedChangedHandler(Root.onSwiped(c, Events.Swiped(item)))

@@ -11,7 +11,7 @@ import android.view.ViewGroup
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.fragment_recyclerview.*
 import kotlinx.android.synthetic.main.item_seekbar.*
-import kotlinx.android.synthetic.main.item_swipe.*
+import kotlinx.android.synthetic.main.item_switch.*
 import y2k.dynamicui.R
 import y2k.dynamicui.common.*
 import y2k.dynamicui.litho.Model
@@ -30,13 +30,21 @@ class RecyclerViewFragment : Fragment() {
     }
 
     private fun handleEffect(effect: EffectHandlers?, model: Model, adapter: Adapter) {
-        adapter.submitList(model.items)
+        adapter.submitList(model.items.flatConfigs())
 
         ElmUtils.dispatchEffect(effect) { msg ->
             val (newModel, newEffect) = Page.update(model, msg)
             handleEffect(newEffect, newModel, adapter)
         }
     }
+
+    private fun List<Item>.flatConfigs(): List<Item> =
+        flatMap {
+            when (it) {
+                is GroupItem -> it.children
+                else -> listOf(it)
+            }
+        }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
         inflater.inflate(R.layout.fragment_recyclerview, container, false)
@@ -71,6 +79,7 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
 
         fun bind(item: SwitchItem) {
             switchView.text = "${item.hashCode()}"
+            switchView.isChecked = item.isChecked
         }
     }
 
@@ -85,9 +94,9 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
 
     companion object {
 
-        private val itemCallback = object : DiffUtil.ItemCallback<Item>() {
-            override fun areItemsTheSame(oldItem: Item?, newItem: Item?): Boolean = oldItem == oldItem
-            override fun areContentsTheSame(oldItem: Item?, newItem: Item?): Boolean = oldItem == oldItem
+        val itemCallback = object : DiffUtil.ItemCallback<Item>() {
+            override fun areItemsTheSame(oldItem: Item?, newItem: Item?): Boolean = oldItem == newItem
+            override fun areContentsTheSame(oldItem: Item?, newItem: Item?): Boolean = oldItem == newItem
         }
     }
 }
