@@ -58,7 +58,7 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
         val inflater = LayoutInflater.from(parent.context)
         return when (getItem(viewType)) {
             is GroupItem -> TODO()
-            is SwitchItem -> SwitchVH(inflater.inflate(R.layout.item_swipe, parent, false))
+            is SwitchItem -> SwitchVH(inflater.inflate(R.layout.item_switch, parent, false))
             is SeekBarItem -> SeekBarVH(inflater.inflate(R.layout.item_seekbar, parent, false))
             is NumberItem -> TODO()
         }

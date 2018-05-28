@@ -20,7 +20,7 @@ object Effects {
         val r = Random()
         return List(10) {
             GroupItem("Group #$it", r.nextBoolean(), listOf(
-                NumberItem(0), SeekBarItem(r.nextFloat()), SwitchItem("Swipe #$it", r.nextBoolean())))
+                SeekBarItem(r.nextFloat()), SwitchItem("Swipe #$it", r.nextBoolean())))
         }
     }
 }
