@@ -7,7 +7,7 @@ sealed class Item
 
 data class GroupItem(val title: String, val isEnabled: Boolean, val children: List<Item>) : Item()
 
-data class SwipeItem(val title: String, val isChecked: Boolean) : Item()
+data class SwitchItem(val title: String, val isChecked: Boolean) : Item()
 
 data class SeekBarItem(val value: Float) : Item()
 
@@ -20,7 +20,7 @@ object Effects {
         val r = Random()
         return List(10) {
             GroupItem("Group #$it", r.nextBoolean(), listOf(
-                NumberItem(0), SeekBarItem(r.nextFloat()), SwipeItem("Swipe #$it", r.nextBoolean())))
+                NumberItem(0), SeekBarItem(r.nextFloat()), SwitchItem("Swipe #$it", r.nextBoolean())))
         }
     }
 }

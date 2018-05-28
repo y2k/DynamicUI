@@ -42,50 +42,39 @@ class RecyclerViewFragment : Fragment() {
         inflater.inflate(R.layout.fragment_recyclerview, container, false)
 }
 
-private class Adapter : ListAdapter<Item, Adapter.VH>(itemCallback) {
+private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
 
     override fun getItemViewType(position: Int): Int = position
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val i = LayoutInflater.from(parent.context)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
         return when (getItem(viewType)) {
-            is GroupItem -> SwitchVH(i.inflate(R.layout.item_swipe, parent, false))
-            is SwipeItem -> TODO()
-            is SeekBarItem -> TODO()
+            is GroupItem -> TODO()
+            is SwitchItem -> SwitchVH(inflater.inflate(R.layout.item_swipe, parent, false))
+            is SeekBarItem -> SeekBarVH(inflater.inflate(R.layout.item_seekbar, parent, false))
             is NumberItem -> TODO()
         }
     }
 
-    override fun onBindViewHolder(holder: VH, position: Int) {
-
-        val x =
-            when (getItem(position)) {
-                is GroupItem -> TODO()
-                is SwipeItem -> TODO()
-                is SeekBarItem -> TODO()
-                is NumberItem -> TODO()
-            }
-
-        holder.bind(getItem(position))
-    }
-
-    private abstract class VH(view: View) : ViewHolder(view) {
-        abstract fun bind(item: Item)
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val item = getItem(position)
+        when (item) {
+            is GroupItem -> TODO()
+            is SwitchItem -> (holder as SwitchVH).bind(item)
+            is SeekBarItem -> (holder as SeekBarVH).bind(item)
+            is NumberItem -> TODO()
+        }
     }
 
     private class SwitchVH(override val containerView: View)
-        : LayoutContainer, VH(containerView) {
+        : ViewHolder(containerView), LayoutContainer {
 
-        override fun bind(item: Item) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        fun bind(item: SwipeItem) {
+        fun bind(item: SwitchItem) {
             switchView.text = "${item.hashCode()}"
         }
     }
 
-    private class SpinnerVH(override val containerView: View)
+    private class SeekBarVH(override val containerView: View)
         : ViewHolder(containerView), LayoutContainer {
 
         fun bind(item: SeekBarItem) {
