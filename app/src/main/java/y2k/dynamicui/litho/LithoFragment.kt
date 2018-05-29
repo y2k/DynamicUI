@@ -23,7 +23,7 @@ import y2k.dynamicui.common.SwitchComponent.create as switch
 
 sealed class Events {
     class ItemsLoaded(val items: List<Item>) : Events()
-    class Swiped(val item: Item) : Events()
+    class Switch(val item: Item) : Events()
     class Click(val item: Item, val increase: Boolean) : Events()
 }
 
@@ -37,7 +37,7 @@ object Page {
     fun update(model: Model, msg: Events): Pair<Model, EffectHandlers?> =
         when (msg) {
             is Events.ItemsLoaded -> model.copy(items = msg.items) to null
-            is Events.Swiped -> model to EffectHandlers.LoadItems
+            is Events.Switch -> model to EffectHandlers.LoadItems
             is Events.Click -> model to EffectHandlers.LoadItems
         }
 
@@ -107,7 +107,7 @@ object Page {
     private fun viewSwitch(c: ComponentContext, item: SwitchItem) =
         switch(c).apply {
             isChecked(item.isChecked)
-            switchIsCheckedChangedHandler(Root.onSwiped(c, Events.Swiped(item)))
+            switchIsCheckedChangedHandler(Root.onSwiped(c, Events.Switch(item)))
         }
 
     private fun viewSeekBarItem(c: ComponentContext, item: SeekBarItem) =

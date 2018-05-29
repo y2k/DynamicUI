@@ -26,7 +26,7 @@ object ElmUtils {
     }
 
     @Deprecated("")
-    fun dispatchEffect(c: ComponentContext, effect: EffectHandlers?) {
+    private fun dispatchEffect(c: ComponentContext, effect: EffectHandlers?) {
         if (effect == null) return
 
         launch(UI) {

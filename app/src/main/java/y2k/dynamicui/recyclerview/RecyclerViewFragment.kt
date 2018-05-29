@@ -8,43 +8,34 @@ import android.support.v7.widget.RecyclerView.ViewHolder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.SeekBar
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.fragment_recyclerview.*
+import kotlinx.android.synthetic.main.item_number.*
 import kotlinx.android.synthetic.main.item_seekbar.*
 import kotlinx.android.synthetic.main.item_switch.*
 import y2k.dynamicui.R
 import y2k.dynamicui.common.*
-import y2k.dynamicui.litho.Model
-import y2k.dynamicui.litho.Page
 
 class RecyclerViewFragment : Fragment() {
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    private val adapter = Adapter()
 
-        val adapter = Adapter()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        retainInstance = true
+        Elm.start(ConfigComponent, { adapter.submitList(Items.flatConfigs(it.configs)) })
+    }
+
+    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         list.adapter = adapter
-
-        val (model, effect) = Page.init()
-        handleEffect(effect, model, adapter)
     }
 
-    private fun handleEffect(effect: EffectHandlers?, model: Model, adapter: Adapter) {
-        adapter.submitList(model.items.flatConfigs())
-
-        ElmUtils.dispatchEffect(effect) { msg ->
-            val (newModel, newEffect) = Page.update(model, msg)
-            handleEffect(newEffect, newModel, adapter)
-        }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        list.adapter = null
     }
-
-    private fun List<Item>.flatConfigs(): List<Item> =
-        flatMap {
-            when (it) {
-                is GroupItem -> it.children
-                else -> listOf(it)
-            }
-        }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
         inflater.inflate(R.layout.fragment_recyclerview, container, false)
@@ -52,50 +43,95 @@ class RecyclerViewFragment : Fragment() {
 
 private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
 
+    var list = emptyList<Item>()
+
+    override fun submitList(list: List<Item>) {
+        super.submitList(list)
+        this.list = list
+    }
+
     override fun getItemViewType(position: Int): Int = position
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return when (getItem(viewType)) {
+            is SwitchItem -> SwitchVH(inflater.inflate(R.layout.item_switch, parent, false), this)
+            is SeekBarItem -> SeekBarVH(inflater.inflate(R.layout.item_seekbar, parent, false), this)
+            is NumberItem -> NumberVH(inflater.inflate(R.layout.item_number, parent, false), this)
             is GroupItem -> TODO()
-            is SwitchItem -> SwitchVH(inflater.inflate(R.layout.item_switch, parent, false))
-            is SeekBarItem -> SeekBarVH(inflater.inflate(R.layout.item_seekbar, parent, false))
-            is NumberItem -> TODO()
         }
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = getItem(position)
         when (item) {
-            is GroupItem -> TODO()
             is SwitchItem -> (holder as SwitchVH).bind(item)
             is SeekBarItem -> (holder as SeekBarVH).bind(item)
-            is NumberItem -> TODO()
+            is NumberItem -> (holder as NumberVH).bind(item)
+            is GroupItem -> TODO()
         }
     }
 
-    private class SwitchVH(override val containerView: View)
+    private class SwitchVH(override val containerView: View, private val adapter: Adapter)
         : ViewHolder(containerView), LayoutContainer {
 
         fun bind(item: SwitchItem) {
-            switchView.text = "${item.hashCode()}"
+            switchView.text = item.title
             switchView.isChecked = item.isChecked
+
+            switchView.setOnCheckedChangeListener { _, _ ->
+                Elm.event(Msg_.Switch(item),
+                    ConfigComponent,
+                    { adapter.list.let(::Model_) },
+                    { adapter.submitList(Items.flatConfigs(it.configs)) })
+            }
         }
     }
 
-    private class SeekBarVH(override val containerView: View)
+    private class SeekBarVH(override val containerView: View, private val adapter: Adapter)
         : ViewHolder(containerView), LayoutContainer {
 
         fun bind(item: SeekBarItem) {
-            seekbar.progress = (10_000 * item.value).toInt()
             seekbar.max = 10_000
+            seekbar.progress = (10_000 * item.value).toInt()
+
+            seekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) = Unit
+                override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+                override fun onStopTrackingTouch(seekBar: SeekBar) {
+                    Elm.event(Msg_.SeekBar(item, seekBar.progress / 10_000f),
+                        ConfigComponent,
+                        { adapter.list.let(::Model_) },
+                        { adapter.submitList(Items.flatConfigs(it.configs)) })
+                }
+            })
+        }
+    }
+
+    private class NumberVH(override val containerView: View, private val adapter: Adapter)
+        : ViewHolder(containerView), LayoutContainer {
+
+        fun bind(item: NumberItem) {
+            number.text = "${item.value}"
+
+            decrease.setOnClickListener {
+                Elm.event(Msg_.Click(item, false),
+                    ConfigComponent,
+                    { adapter.list.let(::Model_) },
+                    { adapter.submitList(Items.flatConfigs(it.configs)) })
+            }
+            increase.setOnClickListener {
+                Elm.event(Msg_.Click(item, true), ConfigComponent,
+                    { adapter.list.let(::Model_) },
+                    { adapter.submitList(Items.flatConfigs(it.configs)) })
+            }
         }
     }
 
     companion object {
 
         val itemCallback = object : DiffUtil.ItemCallback<Item>() {
-            override fun areItemsTheSame(oldItem: Item?, newItem: Item?): Boolean = oldItem == newItem
+            override fun areItemsTheSame(oldItem: Item, newItem: Item): Boolean = Items.compareById(oldItem, newItem)
             override fun areContentsTheSame(oldItem: Item?, newItem: Item?): Boolean = oldItem == newItem
         }
     }
