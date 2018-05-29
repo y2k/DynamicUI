@@ -5,7 +5,7 @@ import java.util.*
 
 sealed class Item
 
-data class GroupItem(val title: String, val isEnabled: Boolean, val children: List<Item>) : Item()
+data class GroupItem(val title: String, val isEnabled: Boolean, val id: Int, val children: List<Item>) : Item()
 
 data class SwitchItem(val title: String, val isChecked: Boolean, val id: Int) : Item()
 
@@ -60,30 +60,30 @@ object Items {
         }
 
     fun compareById(oldItem: Item, newItem: Item): Boolean = when (oldItem) {
-        is GroupItem -> false
+        is GroupItem -> newItem is GroupItem && oldItem.id == newItem.id
         is SwitchItem -> newItem is SwitchItem && oldItem.id == newItem.id
         is SeekBarItem -> newItem is SeekBarItem && oldItem.id == newItem.id
         is NumberItem -> newItem is NumberItem && oldItem.id == newItem.id
     }
 }
 
-private fun <T> List<Item>.walk(f: (Item) -> T): List<T> =
-    flatMap {
+private fun List<Item>.walk(f: (Item) -> Item): List<Item> =
+    map {
         when (it) {
-            is GroupItem -> f(it).let(::listOf) + it.children.walk(f)
-            else -> f(it).let(::listOf)
+            is GroupItem -> it.copy(children = it.children.walk(f))
+            else -> f(it)
         }
     }
 
 object Effects {
 
     suspend fun loadSettings(): List<Item> {
-        delay(1000)
+        delay(500)
         var id = 0
         val r = Random()
 
         return List(10) {
-            GroupItem("Group #$it", r.nextBoolean(), listOf(
+            GroupItem("Group #$it", r.nextBoolean(), id++, listOf(
                 NumberItem(r.nextInt(100), id++),
                 SeekBarItem(r.nextFloat(), id++),
                 SwitchItem("Swipe #$it", r.nextBoolean(), id++)))

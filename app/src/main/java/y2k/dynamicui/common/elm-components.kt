@@ -16,8 +16,8 @@ sealed class Cmd<out TModel, out TMsg> {
 
 object Elm {
 
-    fun event(msg: Msg_, component: ConfigComponent, getState: () -> Model_, setState: (Model_) -> Unit) {
-        val cmd = component.reduce(getState(), msg)
+    fun event(component: ConfigComponent, msg: Msg_, state: Model_, setState: (Model_) -> Unit) {
+        val cmd = component.reduce(state, msg)
         loop(cmd, component, setState)
     }
 

@@ -64,7 +64,10 @@ object SwitchComponentSpec {
     }
 }
 
-@MountSpec
+@Event
+class SeekBarChanged(@JvmField var value: Float = 0f)
+
+@MountSpec(events = [SeekBarChanged::class])
 object SeekBarComponentSpec {
 
     @OnCreateMountContent
@@ -75,6 +78,22 @@ object SeekBarComponentSpec {
     fun onMount(c: ComponentContext, view: SeekBar, @Prop value: Float) {
         view.progress = (10_000 * value).toInt()
     }
+
+    @OnBind
+    fun onBind(c: ComponentContext, view: SeekBar) {
+        val e = SeekBarComponent.getSeekBarChangedHandler(c) ?: return
+        view.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) = Unit
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+                SeekBarComponent.dispatchSeekBarChanged(e, seekBar.progress / 10_000f)
+            }
+        })
+    }
+
+    @OnUnbind
+    fun onUnbind(c: ComponentContext, view: SeekBar) =
+        view.setOnSeekBarChangeListener(null)
 
     @OnMeasure
     fun onMeasure(c: ComponentContext, layout: ComponentLayout, widthSpec: Int, heightSpec: Int, size: Size) {

@@ -12,6 +12,7 @@ import com.facebook.litho.annotations.*
 import com.facebook.yoga.YogaAlign
 import com.facebook.yoga.YogaEdge
 import y2k.dynamicui.common.*
+import java.util.concurrent.atomic.AtomicReference
 import com.facebook.litho.Column.create as column
 import com.facebook.litho.LithoView.create as lithoView
 import com.facebook.litho.Row.create as row
@@ -21,34 +22,15 @@ import com.facebook.litho.widget.VerticalScroll.create as scroll
 import y2k.dynamicui.common.SeekBarComponent.create as seekBar
 import y2k.dynamicui.common.SwitchComponent.create as switch
 
-sealed class Events {
-    class ItemsLoaded(val items: List<Item>) : Events()
-    class Switch(val item: Item) : Events()
-    class Click(val item: Item, val increase: Boolean) : Events()
-}
+object StatelessComponent {
 
-data class Model(val items: List<Item>)
-
-object Page {
-
-    fun init(): Pair<Model, EffectHandlers?> =
-        Model(emptyList()) to EffectHandlers.LoadItems
-
-    fun update(model: Model, msg: Events): Pair<Model, EffectHandlers?> =
-        when (msg) {
-            is Events.ItemsLoaded -> model.copy(items = msg.items) to null
-            is Events.Switch -> model to EffectHandlers.LoadItems
-            is Events.Click -> model to EffectHandlers.LoadItems
-        }
-
-    fun view(c: ComponentContext, @State state: Model): Component =
+    fun render(c: ComponentContext, @State state: Model_): Component =
         scroll(c).apply {
             childComponent(
                 column(c).apply {
-                    paddingDip(YogaEdge.HORIZONTAL, 16f)
                     backgroundColor(Color.WHITE)
 
-                    state.items
+                    state.configs
                         .map { viewConfig(c, it) }
                         .forEach { child(it) }
                 })
@@ -64,7 +46,8 @@ object Page {
 
     private fun viewGroup(c: ComponentContext, item: GroupItem): Column.Builder =
         column(c).apply {
-            marginDip(YogaEdge.VERTICAL, 8f)
+            marginDip(YogaEdge.ALL, 8f)
+            paddingDip(YogaEdge.ALL, 8f)
             backgroundColor(Color.LTGRAY)
 
             child(
@@ -80,13 +63,14 @@ object Page {
 
     private fun viewNumber(c: ComponentContext, item: NumberItem) =
         row(c).apply {
+            marginDip(YogaEdge.VERTICAL, 8f)
             heightDip(50f)
 
             child(
                 text(c, android.R.attr.buttonStyle, 0).apply {
                     text("-")
                     widthDip(100f)
-                    clickHandler(Root.onClick(c, Events.Click(item, false)))
+                    clickHandler(Root.onClicked(c, Msg_.Click(item, false)))
                 })
             child(
                 text(c).apply {
@@ -98,7 +82,7 @@ object Page {
                 })
             child(
                 text(c, android.R.attr.buttonStyle, 0).apply {
-                    clickHandler(Root.onClick(c, Events.Click(item, true)))
+                    clickHandler(Root.onClicked(c, Msg_.Click(item, true)))
                     text("+")
                     widthDip(100f)
                 })
@@ -106,47 +90,51 @@ object Page {
 
     private fun viewSwitch(c: ComponentContext, item: SwitchItem) =
         switch(c).apply {
+            marginDip(YogaEdge.VERTICAL, 8f)
+
             isChecked(item.isChecked)
-            switchIsCheckedChangedHandler(Root.onSwiped(c, Events.Switch(item)))
+            switchIsCheckedChangedHandler(Root.onSwitchChanged(c, Msg_.Switch(item)))
         }
 
     private fun viewSeekBarItem(c: ComponentContext, item: SeekBarItem) =
         seekBar(c).apply {
+            marginDip(YogaEdge.VERTICAL, 8f)
+
             value(item.value)
+            seekBarChangedHandler(Root.onSeekBarChanged(c, item))
         }
 }
-
-@Event
-object UpdateStateEvent
 
 @LayoutSpec
 object RootSpec {
 
     @OnCreateInitialState
-    fun createInitialState(c: ComponentContext, state: StateValue<Model>) {
-        val (model, effect) = Page.init()
-        state.set(model)
-        ElmUtils.dispatchEffect(effect, { Root.onUpdateState(c, it).dispatchEvent(UpdateStateEvent) })
+    fun createInitialState(c: ComponentContext, state: StateValue<Model_>) {
+        val x = AtomicReference<(Model_) -> Unit>(state::set)
+        Elm.start(ConfigComponent, {
+            x.get().invoke(it)
+            x.set { Root.updateStateAsync(c, it) }
+        })
     }
 
-    @OnEvent(UpdateStateEvent::class)
-    fun onUpdateState(c: ComponentContext, @Param msg: Events, @State state: Model) =
-        ElmUtils.dispatchEvents(c, state, msg, { Root.updateState(c, it) })
-
     @OnEvent(SwitchIsCheckedChanged::class)
-    fun onSwiped(c: ComponentContext, @State state: Model, @Param msg: Events) =
-        ElmUtils.dispatchEvents(c, state, msg, { Root.updateState(c, it) })
+    fun onSwitchChanged(c: ComponentContext, @State state: Model_, @Param msg: Msg_) =
+        Elm.event(ConfigComponent, msg, state, { Root.updateStateAsync(c, it) })
 
     @OnEvent(ClickEvent::class)
-    fun onClick(c: ComponentContext, @State state: Model, @Param msg: Events) =
-        ElmUtils.dispatchEvents(c, state, msg, { Root.updateState(c, it) })
+    fun onClicked(c: ComponentContext, @State state: Model_, @Param msg: Msg_) =
+        Elm.event(ConfigComponent, msg, state, { Root.updateStateAsync(c, it) })
+
+    @OnEvent(SeekBarChanged::class)
+    fun onSeekBarChanged(c: ComponentContext, @State state: Model_, @Param item: SeekBarItem, @FromEvent value: Float) =
+        Elm.event(ConfigComponent, Msg_.SeekBar(item, value), state, { Root.updateStateAsync(c, it) })
 
     @OnCreateLayout
-    fun onCreateLayout(c: ComponentContext, @State state: Model): Component =
-        Page.view(c, state)
+    fun onCreateLayout(c: ComponentContext, @State state: Model_): Component =
+        StatelessComponent.render(c, state)
 
     @OnUpdateState
-    fun updateState(state: StateValue<Model>, @Param param: Model) =
+    fun updateState(state: StateValue<Model_>, @Param param: Model_) =
         state.set(param)
 }
 

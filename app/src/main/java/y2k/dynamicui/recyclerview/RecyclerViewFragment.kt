@@ -80,9 +80,9 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
             switchView.isChecked = item.isChecked
 
             switchView.setOnCheckedChangeListener { _, _ ->
-                Elm.event(Msg_.Switch(item),
-                    ConfigComponent,
-                    { adapter.list.let(::Model_) },
+                Elm.event(ConfigComponent,
+                    Msg_.Switch(item),
+                    adapter.list.let(::Model_),
                     { adapter.submitList(Items.flatConfigs(it.configs)) })
             }
         }
@@ -99,9 +99,9 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
                 override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) = Unit
                 override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
                 override fun onStopTrackingTouch(seekBar: SeekBar) {
-                    Elm.event(Msg_.SeekBar(item, seekBar.progress / 10_000f),
-                        ConfigComponent,
-                        { adapter.list.let(::Model_) },
+                    Elm.event(ConfigComponent,
+                        Msg_.SeekBar(item, seekBar.progress / 10_000f),
+                        adapter.list.let(::Model_),
                         { adapter.submitList(Items.flatConfigs(it.configs)) })
                 }
             })
@@ -115,14 +115,14 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
             number.text = "${item.value}"
 
             decrease.setOnClickListener {
-                Elm.event(Msg_.Click(item, false),
-                    ConfigComponent,
-                    { adapter.list.let(::Model_) },
+                Elm.event(ConfigComponent,
+                    Msg_.Click(item, false),
+                    adapter.list.let(::Model_),
                     { adapter.submitList(Items.flatConfigs(it.configs)) })
             }
             increase.setOnClickListener {
-                Elm.event(Msg_.Click(item, true), ConfigComponent,
-                    { adapter.list.let(::Model_) },
+                Elm.event(ConfigComponent, Msg_.Click(item, true),
+                    adapter.list.let(::Model_),
                     { adapter.submitList(Items.flatConfigs(it.configs)) })
             }
         }
