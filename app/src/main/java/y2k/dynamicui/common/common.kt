@@ -13,7 +13,7 @@ data class SeekBarItem(val value: Float, val id: Int) : Item()
 
 data class NumberItem(val value: Int, val id: Int) : Item()
 
-object Items {
+object Configs {
 
     fun changeNumber(configs: List<Item>, id: Int, increase: Boolean): List<Item> =
         configs.walk {

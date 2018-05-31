@@ -14,6 +14,9 @@ import kotlinx.android.synthetic.main.fragment_recyclerview.*
 import kotlinx.android.synthetic.main.item_number.*
 import kotlinx.android.synthetic.main.item_seekbar.*
 import kotlinx.android.synthetic.main.item_switch.*
+import y2k.dynamicui.ConfigComponent
+import y2k.dynamicui.Model
+import y2k.dynamicui.Msg
 import y2k.dynamicui.R
 import y2k.dynamicui.common.*
 
@@ -24,7 +27,7 @@ class RecyclerViewFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         retainInstance = true
-        Elm.start(ConfigComponent, { adapter.submitList(Items.flatConfigs(it.configs)) })
+        Elm.start(ConfigComponent, { adapter.submitList(Configs.flatConfigs(it.configs)) })
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
@@ -81,9 +84,9 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
 
             switchView.setOnCheckedChangeListener { _, _ ->
                 Elm.event(ConfigComponent,
-                    Msg_.Switch(item),
-                    adapter.list.let(::Model_),
-                    { adapter.submitList(Items.flatConfigs(it.configs)) })
+                    Msg.Switch(item),
+                    adapter.list.let(::Model),
+                    { adapter.submitList(Configs.flatConfigs(it.configs)) })
             }
         }
     }
@@ -100,9 +103,9 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
                 override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
                 override fun onStopTrackingTouch(seekBar: SeekBar) {
                     Elm.event(ConfigComponent,
-                        Msg_.SeekBar(item, seekBar.progress / 10_000f),
-                        adapter.list.let(::Model_),
-                        { adapter.submitList(Items.flatConfigs(it.configs)) })
+                        Msg.SeekBar(item, seekBar.progress / 10_000f),
+                        adapter.list.let(::Model),
+                        { adapter.submitList(Configs.flatConfigs(it.configs)) })
                 }
             })
         }
@@ -116,14 +119,14 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
 
             decrease.setOnClickListener {
                 Elm.event(ConfigComponent,
-                    Msg_.Click(item, false),
-                    adapter.list.let(::Model_),
-                    { adapter.submitList(Items.flatConfigs(it.configs)) })
+                    Msg.Click(item, false),
+                    adapter.list.let(::Model),
+                    { adapter.submitList(Configs.flatConfigs(it.configs)) })
             }
             increase.setOnClickListener {
-                Elm.event(ConfigComponent, Msg_.Click(item, true),
-                    adapter.list.let(::Model_),
-                    { adapter.submitList(Items.flatConfigs(it.configs)) })
+                Elm.event(ConfigComponent, Msg.Click(item, true),
+                    adapter.list.let(::Model),
+                    { adapter.submitList(Configs.flatConfigs(it.configs)) })
             }
         }
     }
@@ -131,7 +134,7 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
     companion object {
 
         val itemCallback = object : DiffUtil.ItemCallback<Item>() {
-            override fun areItemsTheSame(oldItem: Item, newItem: Item): Boolean = Items.compareById(oldItem, newItem)
+            override fun areItemsTheSame(oldItem: Item, newItem: Item): Boolean = Configs.compareById(oldItem, newItem)
             override fun areContentsTheSame(oldItem: Item?, newItem: Item?): Boolean = oldItem == newItem
         }
     }

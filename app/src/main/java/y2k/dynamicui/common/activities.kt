@@ -1,9 +1,10 @@
-package y2k.dynamicui
+package y2k.dynamicui.common
 
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import com.facebook.soloader.SoLoader
+import y2k.dynamicui.R
 import y2k.dynamicui.litho.LithoFragment
 import y2k.dynamicui.recyclerview.RecyclerViewFragment
 

@@ -11,6 +11,9 @@ import com.facebook.litho.*
 import com.facebook.litho.annotations.*
 import com.facebook.yoga.YogaAlign
 import com.facebook.yoga.YogaEdge
+import y2k.dynamicui.ConfigComponent
+import y2k.dynamicui.Model
+import y2k.dynamicui.Msg
 import y2k.dynamicui.common.*
 import java.util.concurrent.atomic.AtomicReference
 import com.facebook.litho.Column.create as column
@@ -24,7 +27,7 @@ import y2k.dynamicui.common.SwitchComponent.create as switch
 
 object StatelessComponent {
 
-    fun render(c: ComponentContext, @State state: Model_): Component =
+    fun render(c: ComponentContext, @State state: Model): Component =
         scroll(c).apply {
             childComponent(
                 column(c).apply {
@@ -70,7 +73,7 @@ object StatelessComponent {
                 text(c, android.R.attr.buttonStyle, 0).apply {
                     text("-")
                     widthDip(100f)
-                    clickHandler(Root.onClicked(c, Msg_.Click(item, false)))
+                    clickHandler(Root.onClicked(c, Msg.Click(item, false)))
                 })
             child(
                 text(c).apply {
@@ -82,7 +85,7 @@ object StatelessComponent {
                 })
             child(
                 text(c, android.R.attr.buttonStyle, 0).apply {
-                    clickHandler(Root.onClicked(c, Msg_.Click(item, true)))
+                    clickHandler(Root.onClicked(c, Msg.Click(item, true)))
                     text("+")
                     widthDip(100f)
                 })
@@ -93,7 +96,7 @@ object StatelessComponent {
             marginDip(YogaEdge.VERTICAL, 8f)
 
             isChecked(item.isChecked)
-            switchIsCheckedChangedHandler(Root.onSwitchChanged(c, Msg_.Switch(item)))
+            switchIsCheckedChangedHandler(Root.onSwitchChanged(c, Msg.Switch(item)))
         }
 
     private fun viewSeekBarItem(c: ComponentContext, item: SeekBarItem) =
@@ -109,8 +112,8 @@ object StatelessComponent {
 object RootSpec {
 
     @OnCreateInitialState
-    fun createInitialState(c: ComponentContext, state: StateValue<Model_>) {
-        val x = AtomicReference<(Model_) -> Unit>(state::set)
+    fun createInitialState(c: ComponentContext, state: StateValue<Model>) {
+        val x = AtomicReference<(Model) -> Unit>(state::set)
         Elm.start(ConfigComponent, {
             x.get().invoke(it)
             x.set { Root.updateStateAsync(c, it) }
@@ -118,23 +121,23 @@ object RootSpec {
     }
 
     @OnEvent(SwitchIsCheckedChanged::class)
-    fun onSwitchChanged(c: ComponentContext, @State state: Model_, @Param msg: Msg_) =
+    fun onSwitchChanged(c: ComponentContext, @State state: Model, @Param msg: Msg) =
         Elm.event(ConfigComponent, msg, state, { Root.updateStateAsync(c, it) })
 
     @OnEvent(ClickEvent::class)
-    fun onClicked(c: ComponentContext, @State state: Model_, @Param msg: Msg_) =
+    fun onClicked(c: ComponentContext, @State state: Model, @Param msg: Msg) =
         Elm.event(ConfigComponent, msg, state, { Root.updateStateAsync(c, it) })
 
     @OnEvent(SeekBarChanged::class)
-    fun onSeekBarChanged(c: ComponentContext, @State state: Model_, @Param item: SeekBarItem, @FromEvent value: Float) =
-        Elm.event(ConfigComponent, Msg_.SeekBar(item, value), state, { Root.updateStateAsync(c, it) })
+    fun onSeekBarChanged(c: ComponentContext, @State state: Model, @Param item: SeekBarItem, @FromEvent value: Float) =
+        Elm.event(ConfigComponent, Msg.SeekBar(item, value), state, { Root.updateStateAsync(c, it) })
 
     @OnCreateLayout
-    fun onCreateLayout(c: ComponentContext, @State state: Model_): Component =
+    fun onCreateLayout(c: ComponentContext, @State state: Model): Component =
         StatelessComponent.render(c, state)
 
     @OnUpdateState
-    fun updateState(state: StateValue<Model_>, @Param param: Model_) =
+    fun updateState(state: StateValue<Model>, @Param param: Model) =
         state.set(param)
 }
 
