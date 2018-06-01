@@ -27,17 +27,14 @@ class RecyclerViewFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         retainInstance = true
-        Elm.start(ConfigComponent, { adapter.submitList(Configs.flatConfigs(it.configs)) })
+        Elm.start(ConfigComponent, adapter::submitState)
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         list.adapter = adapter
         reload.setOnClickListener {
-            Elm.event(ConfigComponent,
-                Msg.Reload,
-                adapter.list.let(::Model),
-                { adapter.submitList(Configs.flatConfigs(it.configs)) })
+            Elm.event(ConfigComponent, Msg.Reload, adapter.state, adapter::submitState)
         }
     }
 
@@ -52,11 +49,11 @@ class RecyclerViewFragment : Fragment() {
 
 private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
 
-    var list = emptyList<Item>()
+    lateinit var state: Model
 
-    override fun submitList(list: List<Item>) {
-        super.submitList(list)
-        this.list = list
+    fun submitState(state: Model) {
+        this.state = state
+        submitList(Configs.flatConfigs(state.configs))
     }
 
     override fun getItemViewType(position: Int): Int = position
@@ -89,10 +86,7 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
             switchView.isChecked = item.isChecked
 
             switchView.setOnCheckedChangeListener { _, _ ->
-                Elm.event(ConfigComponent,
-                    Msg.Switch(item),
-                    adapter.list.let(::Model),
-                    { adapter.submitList(Configs.flatConfigs(it.configs)) })
+                Elm.event(ConfigComponent, Msg.Switch(item), adapter.state, adapter::submitState)
             }
         }
     }
@@ -110,8 +104,8 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
                 override fun onStopTrackingTouch(seekBar: SeekBar) {
                     Elm.event(ConfigComponent,
                         Msg.SeekBar(item, seekBar.progress / 10_000f),
-                        adapter.list.let(::Model),
-                        { adapter.submitList(Configs.flatConfigs(it.configs)) })
+                        adapter.state,
+                        adapter::submitState)
                 }
             })
         }
@@ -124,15 +118,10 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
             number.text = "${item.value}"
 
             decrease.setOnClickListener {
-                Elm.event(ConfigComponent,
-                    Msg.Click(item, false),
-                    adapter.list.let(::Model),
-                    { adapter.submitList(Configs.flatConfigs(it.configs)) })
+                Elm.event(ConfigComponent, Msg.Click(item, false), adapter.state, adapter::submitState)
             }
             increase.setOnClickListener {
-                Elm.event(ConfigComponent, Msg.Click(item, true),
-                    adapter.list.let(::Model),
-                    { adapter.submitList(Configs.flatConfigs(it.configs)) })
+                Elm.event(ConfigComponent, Msg.Click(item, true), adapter.state, adapter::submitState)
             }
         }
     }
