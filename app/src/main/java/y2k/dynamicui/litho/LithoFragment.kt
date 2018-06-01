@@ -14,6 +14,7 @@ import com.facebook.yoga.YogaEdge
 import y2k.dynamicui.ConfigComponent
 import y2k.dynamicui.Model
 import y2k.dynamicui.Msg
+import y2k.dynamicui.R
 import y2k.dynamicui.common.*
 import java.util.concurrent.atomic.AtomicReference
 import com.facebook.litho.Column.create as column
@@ -29,9 +30,18 @@ object StatelessComponent {
 
     fun render(c: ComponentContext, @State state: Model): Component =
         scroll(c).apply {
+            backgroundColor(Color.WHITE)
+
             childComponent(
                 column(c).apply {
-                    backgroundColor(Color.WHITE)
+
+                    child(
+                        text(c, android.R.attr.buttonStyle, 0).apply {
+                            marginDip(YogaEdge.HORIZONTAL, 4f)
+                            marginDip(YogaEdge.TOP, 4f)
+                            textRes(R.string.reload)
+                            clickHandler(Root.onClicked(c, Msg.Reload))
+                        })
 
                     state.configs
                         .map { viewConfig(c, it) }

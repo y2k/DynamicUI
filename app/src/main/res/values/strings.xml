@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">DynamicUi</string>
+    <string name="reload">RELOAD</string>
 </resources>

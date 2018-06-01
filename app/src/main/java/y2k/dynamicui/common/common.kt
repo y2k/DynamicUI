@@ -4,13 +4,9 @@ import kotlinx.coroutines.experimental.delay
 import java.util.*
 
 sealed class Item
-
 data class GroupItem(val title: String, val isEnabled: Boolean, val id: Int, val children: List<Item>) : Item()
-
 data class SwitchItem(val title: String, val isChecked: Boolean, val id: Int) : Item()
-
 data class SeekBarItem(val value: Float, val id: Int) : Item()
-
 data class NumberItem(val value: Int, val id: Int) : Item()
 
 object Configs {
@@ -82,11 +78,11 @@ object Effects {
         var id = 0
         val r = Random()
 
-        return List(10) {
-            GroupItem("Group #$it", r.nextBoolean(), id++, listOf(
+        return List(r.nextInt(8) + 4) {
+            GroupItem("Group #${it + 1}", r.nextBoolean(), id++, listOf(
                 NumberItem(r.nextInt(100), id++),
                 SeekBarItem(r.nextFloat(), id++),
-                SwitchItem("Swipe #$it", r.nextBoolean(), id++)))
+                SwitchItem("Swipe #${it + 1}", r.nextBoolean(), id++)))
         }
     }
 }

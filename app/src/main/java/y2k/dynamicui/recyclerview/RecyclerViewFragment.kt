@@ -33,6 +33,12 @@ class RecyclerViewFragment : Fragment() {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         list.adapter = adapter
+        reload.setOnClickListener {
+            Elm.event(ConfigComponent,
+                Msg.Reload,
+                adapter.list.let(::Model),
+                { adapter.submitList(Configs.flatConfigs(it.configs)) })
+        }
     }
 
     override fun onDestroyView() {
