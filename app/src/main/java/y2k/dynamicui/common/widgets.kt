@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicReference
 @Event
 class SwitchIsCheckedChanged(@JvmField var isChecked: Boolean = false)
 
-@MountSpec(events = [SwitchIsCheckedChanged::class])
+@MountSpec(isPureRender = true, events = [SwitchIsCheckedChanged::class])
 object SwitchComponentSpec {
 
     private val cachedMinSize = AtomicReference<Size>()
@@ -67,7 +67,7 @@ object SwitchComponentSpec {
 @Event
 class SeekBarChanged(@JvmField var value: Float = 0f)
 
-@MountSpec(events = [SeekBarChanged::class])
+@MountSpec(isPureRender = true, events = [SeekBarChanged::class])
 object SeekBarComponentSpec {
 
     @OnCreateMountContent

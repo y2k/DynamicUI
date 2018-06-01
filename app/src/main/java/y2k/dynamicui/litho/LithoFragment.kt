@@ -28,7 +28,7 @@ import y2k.dynamicui.common.SwitchComponent.create as switch
 
 object StatelessComponent {
 
-    fun render(c: ComponentContext, @State state: Model): Component =
+    fun render(c: ComponentContext, state: Model): Component =
         scroll(c).apply {
             backgroundColor(Color.WHITE)
 
