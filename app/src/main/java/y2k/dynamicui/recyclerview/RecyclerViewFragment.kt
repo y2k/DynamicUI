@@ -22,7 +22,7 @@ import y2k.dynamicui.common.*
 
 class RecyclerViewFragment : Fragment() {
 
-    private val adapter = Adapter()
+    private val adapter = StateAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,7 +47,7 @@ class RecyclerViewFragment : Fragment() {
         inflater.inflate(R.layout.fragment_recyclerview, container, false)
 }
 
-private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
+private class StateAdapter : ListAdapter<Item, ViewHolder>(ConfigsCallback()) {
 
     lateinit var state: Model
 
@@ -56,15 +56,21 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
         submitList(Configs.flatConfigs(state.configs))
     }
 
-    override fun getItemViewType(position: Int): Int = position
+    override fun getItemViewType(position: Int): Int =
+        when (getItem(position)) {
+            is GroupItem -> 0
+            is SwitchItem -> 1
+            is SeekBarItem -> 2
+            is NumberItem -> 3
+        }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
-        return when (getItem(viewType)) {
-            is SwitchItem -> SwitchVH(inflater.inflate(R.layout.item_switch, parent, false), this)
-            is SeekBarItem -> SeekBarVH(inflater.inflate(R.layout.item_seekbar, parent, false), this)
-            is NumberItem -> NumberVH(inflater.inflate(R.layout.item_number, parent, false), this)
-            is GroupItem -> TODO()
+        return when (viewType) {
+            1 -> SwitchVH(inflater.inflate(R.layout.item_switch, parent, false), this)
+            2 -> SeekBarVH(inflater.inflate(R.layout.item_seekbar, parent, false), this)
+            3 -> NumberVH(inflater.inflate(R.layout.item_number, parent, false), this)
+            else -> throw IllegalStateException()
         }
     }
 
@@ -74,11 +80,11 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
             is SwitchItem -> (holder as SwitchVH).bind(item)
             is SeekBarItem -> (holder as SeekBarVH).bind(item)
             is NumberItem -> (holder as NumberVH).bind(item)
-            is GroupItem -> TODO()
+            else -> throw IllegalStateException()
         }
     }
 
-    private class SwitchVH(override val containerView: View, private val adapter: Adapter)
+    private class SwitchVH(override val containerView: View, private val adapter: StateAdapter)
         : ViewHolder(containerView), LayoutContainer {
 
         fun bind(item: SwitchItem) {
@@ -91,7 +97,7 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
         }
     }
 
-    private class SeekBarVH(override val containerView: View, private val adapter: Adapter)
+    private class SeekBarVH(override val containerView: View, private val adapter: StateAdapter)
         : ViewHolder(containerView), LayoutContainer {
 
         fun bind(item: SeekBarItem) {
@@ -111,7 +117,7 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
         }
     }
 
-    private class NumberVH(override val containerView: View, private val adapter: Adapter)
+    private class NumberVH(override val containerView: View, private val adapter: StateAdapter)
         : ViewHolder(containerView), LayoutContainer {
 
         fun bind(item: NumberItem) {
@@ -126,11 +132,8 @@ private class Adapter : ListAdapter<Item, ViewHolder>(itemCallback) {
         }
     }
 
-    companion object {
-
-        val itemCallback = object : DiffUtil.ItemCallback<Item>() {
-            override fun areItemsTheSame(oldItem: Item, newItem: Item): Boolean = Configs.compareById(oldItem, newItem)
-            override fun areContentsTheSame(oldItem: Item?, newItem: Item?): Boolean = oldItem == newItem
-        }
+    private class ConfigsCallback : DiffUtil.ItemCallback<Item>() {
+        override fun areItemsTheSame(oldItem: Item, newItem: Item): Boolean = Configs.compareById(oldItem, newItem)
+        override fun areContentsTheSame(oldItem: Item?, newItem: Item?): Boolean = oldItem == newItem
     }
 }

@@ -11,6 +11,7 @@ import com.facebook.litho.*
 import com.facebook.litho.annotations.*
 import com.facebook.yoga.YogaAlign
 import com.facebook.yoga.YogaEdge
+import com.facebook.yoga.YogaJustify
 import y2k.dynamicui.ConfigComponent
 import y2k.dynamicui.Model
 import y2k.dynamicui.Msg
@@ -21,6 +22,7 @@ import com.facebook.litho.Column.create as column
 import com.facebook.litho.LithoView.create as lithoView
 import com.facebook.litho.Row.create as row
 import com.facebook.litho.widget.EditText.create as edit
+import com.facebook.litho.widget.Progress.create as progress
 import com.facebook.litho.widget.Text.create as text
 import com.facebook.litho.widget.VerticalScroll.create as scroll
 import y2k.dynamicui.common.SeekBarComponent.create as seekBar
@@ -28,7 +30,27 @@ import y2k.dynamicui.common.SwitchComponent.create as switch
 
 object StatelessComponent {
 
-    fun render(c: ComponentContext, state: Model): Component =
+    fun render(c: ComponentContext, state: Model): Component.Builder<*> =
+        when (state.loading) {
+            true -> viewProgress(c)
+            else -> viewConfigs(c, state)
+        }
+
+    private fun viewProgress(c: ComponentContext) =
+        column(c).apply {
+            backgroundColor(Color.WHITE)
+            alignItems(YogaAlign.CENTER)
+            justifyContent(YogaJustify.CENTER)
+
+            child(
+                progress(c).apply {
+                    widthDip(70f)
+                    heightDip(70f)
+                    colorRes(android.R.color.holo_blue_light)
+                })
+        }
+
+    private fun viewConfigs(c: ComponentContext, state: Model) =
         scroll(c).apply {
             backgroundColor(Color.WHITE)
 
@@ -39,6 +61,7 @@ object StatelessComponent {
                         text(c, android.R.attr.buttonStyle, 0).apply {
                             marginDip(YogaEdge.HORIZONTAL, 4f)
                             marginDip(YogaEdge.TOP, 4f)
+                            heightDip(48f)
                             textRes(R.string.reload)
                             clickHandler(Root.onClicked(c, Msg.Reload))
                         })
@@ -47,7 +70,7 @@ object StatelessComponent {
                         .map { viewConfig(c, it) }
                         .forEach { child(it) }
                 })
-        }.build()
+        }
 
     private fun viewConfig(c: ComponentContext, item: Item) =
         when (item) {
@@ -144,7 +167,7 @@ object RootSpec {
 
     @OnCreateLayout
     fun onCreateLayout(c: ComponentContext, @State state: Model): Component =
-        StatelessComponent.render(c, state)
+        StatelessComponent.render(c, state).build()
 
     @OnUpdateState
     fun updateState(state: StateValue<Model>, @Param param: Model) =

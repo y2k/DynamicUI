@@ -4,12 +4,12 @@ import kotlinx.coroutines.experimental.launch
 import y2k.dynamicui.ConfigComponent
 import y2k.dynamicui.Model
 import y2k.dynamicui.Msg
-import y2k.dynamicui.common.Cmd.Effect
 import y2k.dynamicui.common.Cmd.Update
+import y2k.dynamicui.common.Cmd.UpdateWithEffect
 
 sealed class Cmd<out TModel, out TMsg> {
     class Update<TModel, TMsg>(val state: TModel) : Cmd<TModel, TMsg>()
-    class Effect<TModel, T, TMsg>(
+    class UpdateWithEffect<TModel, T, TMsg>(
         val state: TModel,
         private val f: suspend () -> T,
         private val toAction: (T) -> TMsg) : Cmd<TModel, TMsg>() {
@@ -31,7 +31,7 @@ object Elm {
     private fun loop(cmd: Cmd<Model, Msg>, component: ConfigComponent, setState: (Model) -> Unit) {
         when (cmd) {
             is Update -> setState(cmd.state)
-            is Effect<Model, *, Msg> -> {
+            is UpdateWithEffect<Model, *, Msg> -> {
                 setState(cmd.state)
                 launch {
                     val cmd2 = component.update(cmd.state, cmd.execute())
