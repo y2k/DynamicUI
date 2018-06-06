@@ -2,7 +2,7 @@ module Model
 
 open System
 
-type SwitchItem = SwitchItem of title : String * isChecked : Boolean * id : Int32
+type SwitchItem = { title : String; isChecked : Boolean; id : Int32 }
 type SeekBarItem = SeekBarItem of value : Single * id : Int32
 type NumberItem = NumberItem of value : Int32 * id : Int32
 
@@ -13,14 +13,10 @@ type Item =
 | NumberItem of NumberItem
 
 module Configs =
-    let changeNumber configs id increase : Item list =
-        failwith "TODO"
-    let changeSwitch configs id : Item list =
-        failwith "TODO"
-    let changeSeekBar configs id value : Item list =
-        failwith "TODO"
-    let flatConfigs configs : Item list =
-        failwith "TODO"
+    let changeNumber configs id increase : Item list = configs
+    let changeSwitch configs id : Item list = configs
+    let changeSeekBar configs id value : Item list = configs
+    let flatConfigs configs : Item list = configs
 
 type LocationId = string
 
